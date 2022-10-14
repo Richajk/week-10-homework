@@ -1,0 +1,92 @@
+{
+    "$schema": "https://vega.github.io/schema/vega/v5.json",
+    "background": "white",
+    "padding": 5,
+    "width": 800,
+    "height": 400,
+    "title": {
+      "text": "The Corruption Perceptions Index (CPI) of the world in 2021",
+      "frame": "group"
+    },
+    "data": [
+      {
+        "name": "source_1",
+        "url": "https://raw.githubusercontent.com/Richajk/9-homework/main/9%20HOMEWORK.csv",
+        "format": {"type": "csv", "delimiter": ","}
+      },
+      {
+        "name": "source_0",
+        "url": "https://raw.githubusercontent.com/Richajk/9-homework/main/ne_110m%20(1).json",
+        "format": {
+          "type": "topojson",
+          "feature": "ne_110m_admin_0_countries",
+          "parse": {}
+        },
+        "transform": [
+          {
+            "type": "formula",
+            "expr": "datum[\"properties\"] && datum[\"properties\"][\"NAME\"]",
+            "as": "properties.NAME"
+          },
+          {
+            "type": "lookup",
+            "from": "source_1",
+            "key": "Country",
+            "fields": ["properties.NAME"],
+            "values": ["year"]
+          },
+          {
+            "type": "filter",
+            "expr": "isValid(datum[\"year\"]) && isFinite(+datum[\"year\"])"
+          }
+        ]
+      }
+    ],
+    "projections": [
+      {
+        "name": "projection",
+        "size": {"signal": "[width, height]"},
+        "fit": {"signal": "data('source_0')"},
+        "type": "equalEarth"
+      }
+    ],
+    "marks": [
+      {
+        "name": "marks",
+        "type": "shape",
+        "style": ["geoshape"],
+        "from": {"data": "source_0"},
+        "encode": {
+          "update": {
+            "fill": {"scale": "color", "field": "year"},
+            "tooltip": {
+              "signal": "{\"Country\": isValid(datum[\"properties.NAME\"]) ? datum[\"properties.NAME\"] : \"\"+datum[\"properties.NAME\"], \"year\": format(datum[\"year\"], \"\")}"
+            },
+            "ariaRoleDescription": {"value": "geoshape"},
+            "description": {
+              "signal": "\"year: \" + (format(datum[\"year\"], \"\")) + \"; Country: \" + (isValid(datum[\"properties.NAME\"]) ? datum[\"properties.NAME\"] : \"\"+datum[\"properties.NAME\"])"
+            }
+          }
+        },
+        "transform": [{"type": "geoshape", "projection": "projection"}]
+      }
+    ],
+    "scales": [
+      {
+        "name": "color",
+        "type": "log",
+        "domain": {"data": "source_0", "field": "year"},
+        "range": "heatmap",
+        "interpolate": "hcl"
+      }
+    ],
+    "legends": [
+      {
+        "fill": "color",
+        "gradientLength": {"signal": "clamp(height, 64, 200)"},
+        "labelOverlap": "greedy",
+        "title": "year"
+      }
+    ],
+    "config": {}
+  }
